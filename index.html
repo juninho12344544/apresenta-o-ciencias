@@ -57,23 +57,33 @@
         window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = 'pt-BR';
+        recognition.continuous = true; // Mantém o microfone sempre ativo
+        recognition.interimResults = false; // Não exibe resultados intermediários
 
         // Comandos de voz
         recognition.onresult = function(event) {
-            const voiceCommand = event.results[0][0].transcript.toLowerCase();
-            if (voiceCommand.includes("proximo")) {
+            const voiceCommand = event.results[event.resultIndex][0].transcript.toLowerCase();
+            console.log("Comando detectado: " + voiceCommand);
+
+            if (voiceCommand.includes("próximo")) {
                 currentIndex = (currentIndex + 1) % images.length; // Passa para a próxima imagem
-            } else if (voiceCommand.includes("volta")) {
+            } else if (voiceCommand.includes("voltar")) {
                 currentIndex = (currentIndex - 1 + images.length) % images.length; // Volta para a imagem anterior
             }
             updateImage();
         };
 
-        // Inicia o reconhecimento de voz quando a página é carregada
-        recognition.onend = function() {
-            recognition.start(); // Reinicia o reconhecimento após cada comando
+        // Se houver erro ou o reconhecimento parar, reinicia o processo
+        recognition.onerror = function(event) {
+            console.error("Erro no reconhecimento de voz:", event.error);
+            recognition.start(); // Reinicia o reconhecimento em caso de erro
         };
 
+        recognition.onend = function() {
+            recognition.start(); // Reinicia o reconhecimento para manter o microfone sempre ativo
+        };
+
+        // Inicia o reconhecimento de voz
         recognition.start();
     </script>
 </body>
