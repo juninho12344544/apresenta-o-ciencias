@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mudador de Imagens</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mudador de Imagens</h1>
+        <img id="image" src="imagem1.jpg" alt="Imagem" />
+        <button id="start">Iniciar Reconhecimento de Voz</button>
+    </div>
+    <script>
+        const images = [
+            'imagem1.jpg',
+            'imagem2.jpg',
+            'imagem3.jpg'
+        ];
+
+        let currentIndex = 0;
+
+        document.getElementById('start').addEventListener('click', () => {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'pt-BR';
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                if (transcript.includes('próximo')) {
+                    nextImage();
+                }
+            };
+
+            recognition.start();
+        });
+
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % images.length;
+            document.getElementById('image').src = images[currentIndex];
+        }
+    </script>
+</body>
+</html>
