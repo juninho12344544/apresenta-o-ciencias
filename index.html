@@ -75,7 +75,7 @@
 
             if (voiceCommand.includes("próximo")) {
                 currentIndex = (currentIndex + 1) % images.length; // Passa para a próxima imagem
-            } else if (voiceCommand.includes("volta")) {
+            } else if (voiceCommand.includes("voltar")) {
                 currentIndex = (currentIndex - 1 + images.length) % images.length; // Volta para a imagem anterior
             }
             updateImage();
