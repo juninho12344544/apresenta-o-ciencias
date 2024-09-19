@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mudador de Imagens</title>
+    <title>Navegação por Imagem com Voz</title>
     <style>
         body {
             display: flex;
@@ -11,53 +11,70 @@
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
+            margin: 0;
             font-family: Arial, sans-serif;
         }
 
         .container {
-            text-align: center;
+            width: 600px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #333;
         }
 
         img {
             max-width: 100%;
-            height: auto;
-            margin: 20px 0;
+            max-height: 100%;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Mudador de Imagens</h1>
-        <img id="image" src="imagem1.jpg" alt="Imagem" />
-        <button id="start">Iniciar Reconhecimento de Voz</button>
+        <img id="imageDisplay" src="https://via.placeholder.com/600x400?text=Imagem+1" alt="Imagem Aleatória">
     </div>
+
     <script>
+        // Lista de URLs de imagens aleatórias
         const images = [
-            'imagem1.jpg',
-            'imagem2.jpg',
-            'imagem3.jpg'
+            "https://via.placeholder.com/600x400?text=Imagem+1",
+            "https://via.placeholder.com/600x400?text=Imagem+2",
+            "https://via.placeholder.com/600x400?text=Imagem+3",
+            "https://via.placeholder.com/600x400?text=Imagem+4",
+            "https://via.placeholder.com/600x400?text=Imagem+5"
         ];
 
         let currentIndex = 0;
+        const imageDisplay = document.getElementById("imageDisplay");
 
-        document.getElementById('start').addEventListener('click', () => {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'pt-BR';
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript.toLowerCase();
-                if (transcript.includes('próximo')) {
-                    nextImage();
-                }
-            };
-
-            recognition.start();
-        });
-
-        function nextImage() {
-            currentIndex = (currentIndex + 1) % images.length;
-            document.getElementById('image').src = images[currentIndex];
+        // Função para atualizar a imagem
+        function updateImage() {
+            imageDisplay.src = images[currentIndex];
         }
+
+        // Configuração do reconhecimento de voz
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+
+        // Comandos de voz
+        recognition.onresult = function(event) {
+            const voiceCommand = event.results[0][0].transcript.toLowerCase();
+            if (voiceCommand.includes("próximo")) {
+                currentIndex = (currentIndex + 1) % images.length; // Passa para a próxima imagem
+            } else if (voiceCommand.includes("voltar")) {
+                currentIndex = (currentIndex - 1 + images.length) % images.length; // Volta para a imagem anterior
+            }
+            updateImage();
+        };
+
+        // Inicia o reconhecimento de voz quando a página é carregada
+        recognition.onend = function() {
+            recognition.start(); // Reinicia o reconhecimento após cada comando
+        };
+
+        recognition.start();
     </script>
 </body>
 </html>
