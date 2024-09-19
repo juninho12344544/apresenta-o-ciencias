@@ -1,98 +1,110 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navegação por Imagem com Voz</title>
+    <title>Apresentação de Slides com PDF e Voz</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .container {
-            width: 600px;
-            height: 400px;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 2px solid #333;
+            background-color: #000;
         }
 
-        img {
-            max-width: 100%;
-            max-height: 100%;
+        canvas {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
         }
     </style>
 </head>
-<body>h
-    <div class="container">
-        <img id="imageDisplay" src="https://via.placeholder.com/600x400?text=Imagem+1" alt="Imagem Aleatória">
-    </div>
+<body>
+
+    <canvas id="pdf-render"></canvas>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.7.107/pdf.min.js"></script>
 
     <script>
-        // Lista de URLs de imagens aleatórias
-        const images = [
-            "https://via.placeholder.com/600x400?text=Imagem+1",
-            "https://via.placeholder.com/600x400?text=Imagem+2",
-            "https://via.placeholder.com/600x400?text=Imagem+3",
-            "https://via.placeholder.com/600x400?text=Imagem+4",
-            "https://via.placeholder.com/600x400?text=Imagem+5"
-        ];
+        // URL do arquivo PDF (substitua pelo nome correto do arquivo PDF que você deseja usar)
+        const pdfUrl = 'apresentacao.pdf';
 
-        let currentIndex = 0;
-        const imageDisplay = document.getElementById("imageDisplay");
+        let pdfDoc = null;
+        let pageNum = 1;
+        const canvas = document.getElementById('pdf-render');
+        const ctx = canvas.getContext('2d');
 
-        // Função para atualizar a imagem
-        function updateImage() {
-            imageDisplay.src = images[currentIndex];
+        // Função para renderizar uma página do PDF
+        function renderPage(num) {
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: 1.5 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+
+                page.render(renderContext);
+            });
+        }
+
+        // Carregar o PDF
+        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdfDoc_) {
+            pdfDoc = pdfDoc_;
+            renderPage(pageNum);
+        });
+
+        // Função para avançar para a próxima página
+        function nextPage() {
+            if (pageNum < pdfDoc.numPages) {
+                pageNum++;
+                renderPage(pageNum);
+            }
+        }
+
+        // Função para voltar à página anterior
+        function prevPage() {
+            if (pageNum > 1) {
+                pageNum--;
+                renderPage(pageNum);
+            }
         }
 
         // Configuração do reconhecimento de voz
         window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognition.lang = 'pt-BR';
-        recognition.interimResults = false; // Não exibe resultados intermediários
-        let listening = false; // Controla o estado de escuta
+        recognition.interimResults = false;
+        recognition.continuous = true;
 
-        // Função para iniciar o reconhecimento de voz por 3 segundos
-        function startRecognition() {
-            if (!listening) {
-                listening = true;
-                recognition.start();
+        // Função para processar o resultado do reconhecimento de voz
+        recognition.addEventListener('result', e => {
+            const transcript = e.results[0][0].transcript.toLowerCase().trim();
+            if (transcript.includes('próximo')) {
+                nextPage();
+            } else if (transcript.includes('volta')) {
+                prevPage();
             }
-        }
+        });
 
-        // Comandos de voz
-        recognition.onresult = function(event) {
-            const voiceCommand = event.results[event.resultIndex][0].transcript.toLowerCase();
-            console.log("Comando detectado: " + voiceCommand);
+        // Iniciar o reconhecimento de voz ao carregar a página
+        recognition.start();
 
-            if (voiceCommand.includes("próximo")) {
-                currentIndex = (currentIndex + 1) % images.length; // Passa para a próxima imagem
-            } else if (voiceCommand.includes("voltar")) {
-                currentIndex = (currentIndex - 1 + images.length) % images.length; // Volta para a imagem anterior
-            }
-            updateImage();
-        };
-
-        // Quando o reconhecimento para, atualiza o estado de escuta
-        recognition.onend = function() {
-            listening = false; // Permite reiniciar o reconhecimento após 3 segundos
-        };
-
-        recognition.onerror = function(event) {
-            console.error("Erro no reconhecimento de voz:", event.error);
-            listening = false; // Permite reiniciar o reconhecimento após erro
-        };
-
-        // Executa o reconhecimento de voz a cada 3 segundos
-        setInterval(startRecognition, 3000); // A cada 3 segundos tenta iniciar o reconhecimento de voz
+        // Recomeçar o reconhecimento de voz após cada comando
+        recognition.addEventListener('end', recognition.start);
     </script>
+
 </body>
 </html>
