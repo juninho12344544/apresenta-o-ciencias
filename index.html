@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -88,14 +88,21 @@
         recognition.lang = 'pt-BR';
         recognition.interimResults = false;
         recognition.continuous = true;
+        let lastCommandTime = 0;  // Para evitar comandos repetidos rapidamente
 
         // Função para processar o resultado do reconhecimento de voz
         recognition.addEventListener('result', e => {
             const transcript = e.results[0][0].transcript.toLowerCase().trim();
+            const currentTime = new Date().getTime();
+
+            if (currentTime - lastCommandTime < 2000) return; // Ignorar se o último comando foi há menos de 2 segundos
+
             if (transcript.includes('próximo')) {
                 nextPage();
+                lastCommandTime = currentTime;
             } else if (transcript.includes('volta')) {
                 prevPage();
+                lastCommandTime = currentTime;
             }
         });
 
